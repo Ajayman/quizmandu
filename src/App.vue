@@ -5,7 +5,7 @@
                 <Register
                         :currentQuestion="shuffleQuestion[index]"
                         :next="next"
-
+                        :previous="previous"
                         :increment="increment"
                         :index="index"
                         :questions="shuffleQuestion"
@@ -43,9 +43,9 @@
             next() {
                 this.index++
             },
-            // previous(){
-            //     this.index--
-            // },
+            previous(){
+                this.index--
+            },
             increment(){
 
             }

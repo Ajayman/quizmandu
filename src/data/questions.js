@@ -3,6 +3,7 @@ export default [
         question: 'What is the capital city of Nepal?',
         correct_answer: 'Kathmandu',
         incorrect_answers: ['Hetauda', 'Birgunj', 'Dhankuta'],
+        answers: [{optionA: 'Kathmandu', value: true}, ],
         category: 'Country'
     },
     {
