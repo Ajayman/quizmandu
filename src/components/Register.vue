@@ -29,48 +29,22 @@
             <button type="button" @click="showQuestion=true; showQuizInfo=false; showTime=true;">Ready</button>
         </el-card>
         <div v-if="showQuestion">
-            <!--Correct: {{}}/Total: {{}}-->
             <el-card class="box-card">
                 <div slot="header" class="clearfix">
                     <span>{{currentQuestion.question}}</span>
                 </div>
-                <div v-for="(answer, index) in answers" :key="index">
+                <div v-for="(answer, index) in shuffledAnswer" :key="index">
                     <el-radio-group v-model="radio">
                         <el-radio :label="index+1" @change="selectAnswer(index)">{{answer}}</el-radio>
                     </el-radio-group>
                 </div>
-                {{correctAnswer}}
-                <button type="button" @click="retryAnswer" :disabled="index==0">Previous</button>
+                <!--{{correctAnswer}}-->
+                <!--<button type="button" @click="retryAnswer" :disabled="index==0">Previous</button>-->
                 <button type="button" @click="checkAnswer" :disabled="selectedIndex===null || answered">OK</button>
                 <button type="button" @click="valueReset" :disabled="index===9">Next</button>
                 <button type="button" @click="finish">Finish</button>
+                <!--{{attemptQuestion}}-->
             </el-card>
-        </div>
-        <div v-if="showFinalResult">
-            <el-tabs type="bordered-card">
-                Name: {{form.name}}
-                <br>
-                Question Attempt: {{}}
-                <br>
-                Total Question: 10
-                <br>
-                Total Correct: {{numCorrect}}
-                <br>
-                Correct Percentage: {{(numCorrect/10)*100}}%
-                <br>
-                <br>
-                <u>All Questions and Answers</u>
-                <div v-for="(question, index) in questions" :key="index">
-                    {{index+1}}.{{question.question}}
-                    <ul>
-                        <li v-for="(ans, qIndex) in question.incorrect_answers" :key="qIndex">
-                            {{ans}}
-                        </li>
-
-                        <li>{{question.correct_answer}}</li>
-                    </ul>
-                </div>
-            </el-tabs>
         </div>
         <circular-count-down-timer
                 :initial-value="time"
@@ -85,6 +59,37 @@
             {{timeoutMessage}}
             <button type="button" @click="submitResult()">Show Result</button>
         </div>
+        <div v-if="showFinalResult">
+            <el-tabs type="bordered-card">
+                Name: {{form.name}}
+                <br>
+                Question Attempt: {{attemptQuestion.length}}
+                <br>
+                Total Question: 10
+                <br>
+                Total Correct: {{numCorrect}}
+                <br>
+                Correct Percentage: {{(numCorrect/10)*100}}%
+                <br>
+                <br>
+                <u>All Questions and Answers</u>
+                <div v-for="(question, index) in questions" :key="index">
+                    *{{question.question}}
+                     <div v-for="(incorrect, i) in question.incorrect_answers" :key="i">
+                         {{incorrect}}
+                         <span v-if="userAnswers[index]===incorrect">
+                             <i class="fas fa-times"></i>
+                         </span>
+                     </div>
+                        {{question.correct_answer}}
+                        <span v-if="userAnswers[index]===question.correct_answer">
+                            <i class="far fa-check-circle"></i>
+                        </span>
+                    <!--UAnswer{{userAnswers}}-->
+                    <!--CAns{{correctAnswers}}-->
+                </div>
+            </el-tabs>
+        </div>
     </div>
 </template>
 
@@ -96,7 +101,7 @@
         props: {
             currentQuestion: {},
             next: Function,
-            previous: Function,
+            // previous: Function,
             increment: Function,
             index: Number,
             questions: Array
@@ -108,7 +113,7 @@
                     name: '',
                     age: 0
                 },
-                time: 30,
+                time: 200,
                 shuffledAnswer: [],
                 showQuizForm: false,
                 showQuestion: false,
@@ -121,18 +126,18 @@
                 showTime: false,
                 numCorrect: 0,
                 numTotal: 0,
-                correctAnswer: [],
                 answered: false,
                 showFinalResult: false,
                 showResult: false,
-                // answeredList : [],
-                question: ''
+                attemptQuestion: [],
+                options: [],
+                correctAnswers: [],
+                userAnswers: []
             }
         },
         computed: {
             answers() {
                 var answers = [...this.currentQuestion.incorrect_answers, this.currentQuestion.correct_answer]
-                // answers.push(this.currentQuestion.correct_answer)
                 return answers
             }
         },
@@ -163,9 +168,12 @@
                     this.showQuizForm = true;
                 },
                 checkAnswer() {
+                    this.attemptQuestion.push(this.currentQuestion);
                     if (this.selectedIndex === this.correctIndex) {
                         this.numCorrect++;
-                        this.correctAnswer.push(this.currentQuestion.correct_answer)
+                        this.userAnswers.push(this.currentQuestion.correct_answer)
+                    } else {
+                        this.userAnswers.push(this.shuffledAnswer[this.selectedIndex])
                     }
                     this.answered = true
                 },
@@ -178,18 +186,23 @@
                     if (this.index === 9) {
                         this.showResult = true;
                     }
-                    // this.question = 'question' + this.index
+                    if (this.selectedIndex === null) {
+                        this.userAnswers.push('')
+                    }
                     this.numTotal++
                 },
                 shuffleAnswer() {
                     var answers = [...this.currentQuestion.incorrect_answers, this.currentQuestion.correct_answer]
+                    this.correctAnswers.push(this.currentQuestion.correct_answer)
                     this.shuffledAnswer = _.shuffle(answers);
-                    this.correctIndex = this.shuffledAnswer.indexOf(this.currentQuestion.correct_answer)
+                    this.correctIndex = this.shuffledAnswer.indexOf(this.currentQuestion.correct_answer);
+                    this.questions[this.index].options = this.shuffledAnswer
                 },
                 finish() {
                     this.timeoutMessage = 'You reached out of time Click Submit to show result.'
                     this.showQuestion = false;
                     this.showResult = true;
+
                 },
                 submitResult() {
                     this.showFinalResult = true;
@@ -199,9 +212,12 @@
                 retryAnswer() {
                     this.radio = 4
                     console.log(this.radio);
-                    this.previous();
+                    // this.previous();
                 }
             }
     }
 </script>
 
+<style scoped>
+
+</style>
